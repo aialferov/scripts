@@ -1,0 +1,13 @@
+#!/bin/bash
+
+flash_dir="$FLASH_ROOT/flash/"
+sync_dir="$HOME/flash/"
+n="";
+
+if [ -z $FLASH_ROOT ]; then echo "\$FLASH_ROOT is empty."; exit; fi
+if [ ! -d $flash_dir ]; then echo "$flash_dir not found."; exit; fi
+
+if [ ! -d $sync_dir ]; then mkdir -p $sync_dir; fi
+if [ "$1" = "-n" ]; then n="n"; fi
+
+rsync -av$n --delete $flash_dir $sync_dir;

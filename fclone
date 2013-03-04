@@ -1,0 +1,12 @@
+#!/bin/bash
+
+project_dir=$FLASH_ROOT/flash/projects/$1
+
+if [ -z $1 ]; then echo "Usage: fclone project"; exit; fi
+if [ -z $FLASH_ROOT ]; then echo "\$FLASH_ROOT is empty."; exit; fi
+if [ ! -d $project_dir ]; then echo "$project_dir not found."; exit; fi
+
+file_name=$(ls -l $project_dir | awk '{print $9}' | tail -n1)
+tar vjxf $project_dir/$file_name
+
+echo "Cloning $file_name complete."

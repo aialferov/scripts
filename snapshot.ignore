@@ -1,0 +1,6 @@
+tmp
+*.log
+*.swp
+*.beam
+*.tar.gz
+erl_crash.dump

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+project=${PWD##*/}
+snapshot_dir=../snapshots/$project
+flash_dir=$FLASH_ROOT/flash/projects/$1/$project
+filename=$project\_src_$(date +%Y%m%d_%H%M%S).tar.bz2
+exceptions=/etc/snapshot.ignore
+
+if [ -z $FLASH_ROOT ]; then echo "\$FLASH_ROOT is empty."; exit; fi
+if [ ! -d $snapshot_dir ]; then mkdir -p $snapshot_dir; fi
+
+tar vjcf ../$filename -X $exceptions ../$project
+mv ../$filename $snapshot_dir
+
+if [ -d $FLASH_ROOT ]
+then
+	mkdir -p $flash_dir
+	cp $snapshot_dir/$filename $flash_dir
+else
+	echo "$FLASH_ROOT not found."
+fi
