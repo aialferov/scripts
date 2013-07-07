@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if [ -z $1 ] || [ -z $2 ]; then echo "Usage: sclone host project"; exit; fi
+
+project_dir=projects/snapshots/$2
+file_name=$(ssh $1 "ls -l $project_dir 2>&1 | tail -n1" \
+	| grep bz2 | awk '{print $9}')
+
+if [ -z $file_name ]; then echo "$project_dir not found."; exit; fi
+
+ssh $1 "cat $project_dir/$file_name" | tar vjxf -
+echo "Cloning $file_name complete."
