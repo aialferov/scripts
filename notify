@@ -1,0 +1,14 @@
+#!/bin/bash
+
+pid=/var/run/notify.pid
+timer=/usr/local/bin/notify
+
+if [ "$1" == "start" ]; then
+	sleep $(($(date -d "$2" +%s) - $(date +%s)))
+	while :; do notify-send "$3"; sleep 15; done
+	exit
+fi
+
+if [ "$1" == "stop" ]; then start-stop-daemon -K -p $pid; rm $pid; exit; fi
+
+start-stop-daemon -S -b -m -p $pid -x $timer -- start $1 $2
