@@ -3,6 +3,9 @@
 pid=/var/run/notify.pid
 timer=/usr/local/bin/notify
 
+if [ -z "$1" ] || [ -z "$2" ];
+	then echo "Usage: notify date/time message"; exit; fi
+
 if [ "$1" == "start" ]; then
 	sleep $(($(date -d "$2" +%s) - $(date +%s)))
 	while :; do notify-send "$3"; sleep 15; done
