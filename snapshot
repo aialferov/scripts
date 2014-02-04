@@ -1,19 +1,50 @@
 #!/bin/bash
 
+usage="
+\nusage: snapshot --root <backup_root> [--path <backup_path>] [--overwrite]\n
+\n
+\t--root <backup_root>\n
+\t\tRoot directory for the snapshot.\n
+\n
+\t--path <backup_path>\n
+\t\tRelative path (will be appended to backup_root) where snapshot\n
+\t\twill be located.\n
+\n
+\t--overwrite\n
+\t\tWill overwrite existing snapshot if any.\n
+\t\tWithout this option creates another snapshot adding current\n
+\t\tdate and time as a suffix.\n
+\n
+\t--exceptions <file_path>\n
+\t\tSpecifies file with list of exceptions should not be added to snapshot.\n
+"
+
 project=${PWD##*/}
-flash_dir=$FLASH_ROOT/flash/projects/$1/$project
-filename=$project\_src_$(date +%Y%m%d_%H%M%S).tar.bz2
-exceptions=/etc/snapshot.ignore
+extension=tar.bz2
+date_format="+%Y%m%d_%H%M%S"
 
-if [ -z $FLASH_ROOT ]; then echo "\$FLASH_ROOT is empty."; exit; fi
-if [ ! -d $snapshot_dir ]; then mkdir -p $snapshot_dir; fi
+for ((i=0;++i<=$#;))
+do
+	case ${@:$i:1} in
+		--root) root=${@:$i+1:1} ;;
+		--path) path=${@:$i+1:1} ;;
+		--exceptions) exceptions=${@:$i+1:1} ;;
+		--overwrite) filename=$project.$extension ;;
+	esac
+done
 
-tar vjcf ../$filename -X $exceptions ../$project
+if [ -z "$root" ]; then echo -e $usage; exit 0; fi
+if [ ! -d "$root" ]; then echo "$root not found."; exit 0; fi
 
-if [ -d $FLASH_ROOT ]
-then
-	mkdir -p $flash_dir
-	mv ../$filename $flash_dir
-else
-	echo "$FLASH_ROOT not found."
+if [ -z "$filename" ]; then
+	filename=$project\_$(date $date_format).$extension
 fi
+
+if [ -n "$exceptions" ]; then
+	if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 0; fi
+	exceptions="-X $exceptions"
+fi
+
+tar vjcf ../$filename $exceptions ../$project
+mkdir -p $root/$path/$project
+mv ../$filename $root/$path/$project

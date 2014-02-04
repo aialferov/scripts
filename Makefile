@@ -7,7 +7,6 @@ install:
 	install -p notify /usr/local/bin
 	install -p sclone /usr/local/bin
 	install -p snapshot /usr/local/bin
-	install -p -m 644 snapshot.ignore /etc
 
 uninstall:
 	rm -f /usr/local/bin/dev
@@ -17,4 +16,3 @@ uninstall:
 	rm -f /usr/local/bin/notify
 	rm -f /usr/local/bin/sclone
 	rm -f /usr/local/bin/snapshot
-	rm -f /etc/snapshot.ignore
