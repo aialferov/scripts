@@ -1,23 +1,46 @@
 #!/bin/bash
 
-target=$1
-options=${@:2}
+man="\
+USAGE
+	$0 [ssh|docs] [OPTIONS]
+
+OPTIONS
+
+	-n dry run
+	-r restore instead of backup
+	-h this help
+"
 
 function sync() {
-	from=$1; to=$2; options=${@:3}
+	from=$1; to=$2; n=$3
 
 	if [ ! -d "$from" ]; then echo "$from is not found."; exit 1; fi
 
 	mkdir -p $to
-	rsync -av $options $from $to
+	rsync -av --delete $n $from $to
 }
 
-if [ -z "$target" ]; then echo "$usage"; exit 1; fi
+function restore() {
+	from=$1; to=$2; n=$3
+	sync $to $from $options
+}
+
+target=$1
+command=sync
+
+for ((i=0;++i<=$#;)); do
+	case ${@:$i:1} in
+		-n) n=-n ;;
+		-h) help=help ;;
+		-r) command=restore ;;
+	esac
+done
+
 if [ -z "$FLASH_ROOT" ]; then echo "\$FLASH_ROOT is empty."; exit 1; fi
+if [ -n "$help" ]; then echo "$man"; exit 0; fi
 
 case "$target" in
-	ssh) sync $HOME/.ssh/ $FLASH_ROOT/flash/ssh/ --delete $options ;;
-	docs) sync $HOME/Documents/ $FLASH_ROOT/flash/docs/ --delete $options ;;
-
-	*) sync $FLASH_ROOT/flash/ $HOME/flash/ --delete $options ;;
+	ssh) $command $HOME/.ssh/ $FLASH_ROOT/flash/ssh/ $n ;;
+	docs) $command $HOME/Documents/ $FLASH_ROOT/flash/docs/ $n ;;
+	*) $command $FLASH_ROOT/flash/ $HOME/flash/ $n ;;
 esac
