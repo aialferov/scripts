@@ -17,12 +17,12 @@ function sync() {
 	if [ ! -d "$from" ]; then echo "$from is not found."; exit 1; fi
 
 	mkdir -p $to
-	rsync -av --delete $n $from $to
+	echo "rsync -av --delete $n $from $to"
 }
 
 function restore() {
 	from=$1; to=$2; n=$3
-	sync $to $from $options
+	sync $to $from $n
 }
 
 target=$1
