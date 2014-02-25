@@ -2,7 +2,7 @@
 
 man="\
 USAGE
-	$0 [ssh|docs] [OPTIONS]
+	$(basename $0) [ssh|docs] [OPTIONS]
 
 OPTIONS
 
