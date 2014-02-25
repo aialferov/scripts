@@ -1,25 +1,31 @@
 #!/bin/bash
 
-usage="
-\nusage: snapshot --root <backup_root> [--path <backup_path>] [--overwrite]\n
-\n
-\t--root <backup_root>\n
-\t\tRoot directory for the snapshot.\n
-\n
-\t--path <backup_path>\n
-\t\tRelative path (will be appended to backup_root) where snapshot\n
-\t\twill be located.\n
-\n
-\t--overwrite\n
-\t\tWill overwrite existing snapshot if any.\n
-\t\tWithout this option creates another snapshot adding current\n
-\t\tdate and time as a suffix.\n
-\n
-\t--exceptions <file_path>\n
-\t\tSpecifies file with list of exceptions should not be added to snapshot.\n
+man="
+USAGE
+	snapshot [OPTIONS]
+
+OPTIONS
+
+	--root <backup_root>
+		Root directory for the snapshot.
+
+	--path <backup_path>
+		Relative path (will be appended to backup_root) where snapshot
+		will be located.
+
+	--overwrite
+		Will overwrite existing snapshot if any.
+		Without this option creates another snapshot adding current
+		date and time as a suffix.
+
+	--exceptions <file_path>
+		Specifies file with list of exceptions should not be added to snapshot.
+
+	--help
+		This help message.
 "
 
-project=${PWD##*/}
+target=${PWD##*/}
 extension=tar.bz2
 date_format="+%Y%m%d_%H%M%S"
 
@@ -29,22 +35,27 @@ do
 		--root) root=${@:$i+1:1} ;;
 		--path) path=${@:$i+1:1} ;;
 		--exceptions) exceptions=${@:$i+1:1} ;;
-		--overwrite) filename=$project.$extension ;;
+		--overwrite) filename=$target.$extension ;;
+		--help) help=help ;;
 	esac
 done
 
-if [ -z "$root" ]; then echo -e $usage; exit 0; fi
-if [ ! -d "$root" ]; then echo "$root not found."; exit 0; fi
+if [ -n "$help" ]; then echo "$man"; exit 0; fi
+if [ -n "$root" ] && [ ! -d "$root" ]; then echo "$root not found."; exit 1; fi
 
 if [ -z "$filename" ]; then
-	filename=$project\_$(date $date_format).$extension
+	filename=$target\_$(date $date_format).$extension
 fi
 
 if [ -n "$exceptions" ]; then
-	if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 0; fi
+	if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 1; fi
 	exceptions="-X $exceptions"
 fi
 
-tar vjcf ../$filename $exceptions ../$project
-mkdir -p $root/$path/$project
-mv ../$filename $root/$path/$project
+cd ../
+tar vjcf $filename $exceptions $target
+
+if [ -n "$root" ]; then
+	mkdir -p $root/$path/$target
+	mv $filename $root/$path/$target
+fi
