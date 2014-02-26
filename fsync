@@ -29,8 +29,13 @@ home=$HOME
 IFS=$':'
 target=($1)
 
-host=${target[0]}
-name=${target[1]}
+if [ -z "${target[1]}" ]; then
+	name="${target[0]}"
+else
+	host="${target[0]}:"
+	name="${target[1]}"
+fi
+
 IFS=$' '
 
 command=sync
@@ -49,8 +54,9 @@ if [ -z "$FLASH_ROOT" ]; then echo "\$FLASH_ROOT is empty."; exit 1; fi
 if [ ! -d "$FLASH_ROOT" ]; then echo "$FLASH_ROOT is not found."; exit 1; fi
 
 case "$name" in
-	ssh) $command $host:$home/.ssh/ $flash/ssh/ $n ;;
+	ssh) $command $host$home/.ssh/ $flash/ssh/ $n ;;
 	git) $command git:git/ $flash/git/ $n ;;
-	docs) $command $host:$home/Documents/ $flash/docs/ $n ;;
-	*) $command $flash/ $host:$home/flash/ $n ;;
+	docs) $command $host$home/Documents/ $flash/docs/ $n ;;
+	flash) $command $flash/ $host$home/flash/ $n ;;
+	*) $command $flash/ $home/flash/ $n ;;
 esac
