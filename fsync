@@ -2,7 +2,7 @@
 
 man="\
 USAGE
-	$(basename $0) [ssh|docs] [OPTIONS]
+	$(basename $0) [HOST:][ssh|docs] [OPTIONS]
 
 OPTIONS
 
@@ -23,7 +23,16 @@ function restore() {
 	sync $to $from $n
 }
 
-target=$1
+flash=$FLASH_ROOT/flash
+home=$HOME
+
+IFS=$':'
+target=($1)
+
+host=${target[0]}
+name=${target[1]}
+IFS=$' '
+
 command=sync
 
 for ((i=0;++i<=$#;)); do
@@ -34,13 +43,14 @@ for ((i=0;++i<=$#;)); do
 	esac
 done
 
-if [ -z "$FLASH_ROOT" ]; then echo "\$FLASH_ROOT is empty."; exit 1; fi
-if [ ! -d "$FLASH_ROOT" ]; then echo "$FLASH_ROOT is not found."; exit 1; fi
 if [ -n "$help" ]; then echo "$man"; exit 0; fi
 
-case "$target" in
-	ssh) $command $HOME/.ssh/ $FLASH_ROOT/flash/ssh/ $n ;;
-	git) $command git:git/ $FLASH_ROOT/flash/git/ $n ;;
-	docs) $command $HOME/Documents/ $FLASH_ROOT/flash/docs/ $n ;;
-	*) $command $FLASH_ROOT/flash/ $HOME/flash/ $n ;;
+if [ -z "$FLASH_ROOT" ]; then echo "\$FLASH_ROOT is empty."; exit 1; fi
+if [ ! -d "$FLASH_ROOT" ]; then echo "$FLASH_ROOT is not found."; exit 1; fi
+
+case "$name" in
+	ssh) $command $host:$home/.ssh/ $flash/ssh/ $n ;;
+	git) $command git:git/ $flash/git/ $n ;;
+	docs) $command $host:$home/Documents/ $flash/docs/ $n ;;
+	*) $command $flash/ $host:$home/flash/ $n ;;
 esac
