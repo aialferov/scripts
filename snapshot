@@ -2,7 +2,7 @@
 
 man="
 USAGE
-	snapshot [OPTIONS]
+	$(basename $0) [OPTIONS]
 
 OPTIONS
 
