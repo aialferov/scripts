@@ -25,6 +25,7 @@ function restore() {
 
 flash=$FLASH_ROOT/flash
 home=$HOME
+command=sync
 
 IFS=$':'; target=($1); IFS=$' '
 
@@ -35,17 +36,13 @@ else
 	name="${target[1]}"
 fi
 
-command=sync
-
 for ((i=0;++i<=$#;)); do
 	case ${@:$i:1} in
 		-n) n=-n ;;
-		-h) help=help ;;
 		-r) command=restore ;;
+		-h) echo "$man"; exit 0 ;;
 	esac
 done
-
-if [ -n "$help" ]; then echo "$man"; exit 0; fi
 
 if [ -z "$FLASH_ROOT" ]; then echo "\$FLASH_ROOT is empty."; exit 1; fi
 if [ ! -d "$FLASH_ROOT" ]; then echo "$FLASH_ROOT is not found."; exit 1; fi
