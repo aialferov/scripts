@@ -6,18 +6,18 @@ USAGE
 
 OPTIONS
 
-	--root <backup_root>
+	--root DIR
 		Root directory for the snapshot.
 
-	--path <backup_path>
+	--path DIR
 		Relative path (will be appended to backup_root) where snapshot will be
 		located.
 
-	--target [HOST]:<target_path>
+	--target [HOST]:DIR
 		Will create snapshot from the specified path instead of the current
 		directory.
 
-	--exceptions <file_path>
+	--exceptions FILE
 		Specifies file with list of exceptions should not be added to snapshot.
 
 	--no-timestamp
@@ -27,6 +27,7 @@ OPTIONS
 		This help message.
 "
 
+tar="tar vjcf"
 extension="tar.bz2"
 timestamp_format="+%Y%m%d_%H%M%S"
 suffix="_$(date $timestamp_format).$extension"
@@ -59,19 +60,19 @@ if [ -n "$target" ]; then
 		target=${target_tokens[0]}
 	fi
 
-	target_path=${target%/*}
+	target_path="-C ${target%/*}"
 	target=${target##*/}
 else
-	target_path="../"
 	target=${PWD##*/}
 fi
 
 filename=$target$suffix
 
 if [ -n "$host" ]; then
-	ssh $host "tar vjcf - -C $target_path $exceptions $target" | cat > $filename
+	ssh $host "$tar - $target_path $exceptions $target" | cat > $filename
 else
-	tar vjcf $filename -C $target_path $exceptions $target
+	if [ -z "$target_path" ]; then cd ../; fi
+	$tar $filename $target_path $exceptions $target
 fi
 
 if [ -n "$root" ]; then
