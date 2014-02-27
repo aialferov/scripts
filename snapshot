@@ -10,50 +10,69 @@ OPTIONS
 		Root directory for the snapshot.
 
 	--path <backup_path>
-		Relative path (will be appended to backup_root) where snapshot
-		will be located.
+		Relative path (will be appended to backup_root) where snapshot will be
+		located.
 
-	--overwrite
-		Will overwrite existing snapshot if any.
-		Without this option creates another snapshot adding current
-		date and time as a suffix.
+	--target [HOST]:<target_path>
+		Will create snapshot from the specified path instead of the current
+		directory.
 
 	--exceptions <file_path>
 		Specifies file with list of exceptions should not be added to snapshot.
+
+	--no-timestamp
+		Will not add timestamp to the snapshot name.
 
 	--help
 		This help message.
 "
 
-target=${PWD##*/}
-extension=tar.bz2
-date_format="+%Y%m%d_%H%M%S"
+extension="tar.bz2"
+timestamp_format="+%Y%m%d_%H%M%S"
+suffix="_$(date $timestamp_format).$extension"
 
-for ((i=0;++i<=$#;))
-do
+for ((i=0;++i<=$#;)); do
 	case ${@:$i:1} in
 		--root) root=${@:$i+1:1} ;;
 		--path) path=${@:$i+1:1} ;;
+		--target) target=${@:$i+1:1} ;;
 		--exceptions) exceptions=${@:$i+1:1} ;;
-		--overwrite) filename=$target.$extension ;;
-		--help) help=help ;;
+		--no-timestamp) suffix=".$extension" ;;
+		--help) echo "$man"; exit 0 ;;
 	esac
 done
 
-if [ -n "$help" ]; then echo "$man"; exit 0; fi
 if [ -n "$root" ] && [ ! -d "$root" ]; then echo "$root not found."; exit 1; fi
-
-if [ -z "$filename" ]; then
-	filename=$target\_$(date $date_format).$extension
-fi
 
 if [ -n "$exceptions" ]; then
 	if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 1; fi
 	exceptions="-X $exceptions"
 fi
 
-cd ../
-tar vjcf $filename $exceptions $target
+if [ -n "$target" ]; then
+	IFS=$':'; target_tokens=($target); IFS=$' '
+
+	if [ -n "${target_tokens[1]}" ]; then
+		host=${target_tokens[0]}
+		target=${target_tokens[1]}
+	else
+		target=${target_tokens[0]}
+	fi
+
+	target_path=${target%/*}
+	target=${target##*/}
+else
+	target_path="../"
+	target=${PWD##*/}
+fi
+
+filename=$target$suffix
+
+if [ -n "$host" ]; then
+	ssh $host "tar vjcf - -C $target_path $exceptions $target" | cat > $filename
+else
+	tar vjcf $filename -C $target_path $exceptions $target
+fi
 
 if [ -n "$root" ]; then
 	mkdir -p $root/$path/$target
