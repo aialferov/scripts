@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for ((i=0;++i<=$#;)); do
+	case ${@:$i:1} in
+		-s) socket=${@:$i+1:1} ;;
+		-h) host=${@:$i+1:1} ;;
+	esac
+done
+
+if [ -z "$socket" ]; then socket="dev"; fi
+if [ -n "$host" ]; then ssh="ssh $host -t"; fi
+
+session=$($ssh tmux -L $socket ls | grep -v failed | cut -d: -f1)
+if [ -n "$session" ]; then attach=" attach"; fi
+
+$ssh tmux -L $socket$attach
