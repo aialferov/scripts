@@ -2,29 +2,30 @@
 
 man="
 USAGE
-	$(basename $0) [OPTIONS]
+    $(basename $0) [OPTIONS]
 
 OPTIONS
 
-	--root DIR
-		Root directory for the snapshot.
+    --root ROOT
+        Root directory for the snapshot.
 
-	--path DIR
-		Relative path (will be appended to backup_root) where snapshot will be
-		located.
+    --path PATH
+        Relative path (will be appended to ROOT) where snapshot will be
+        located.
 
-	--target [HOST]:DIR
-		Will create snapshot from the specified path instead of the current
-		directory.
+    --target [HOST]:PATH
+        Will create snapshot from the specified path instead of the current
+        directory.
 
-	--exceptions FILE
-		Specifies file with list of exceptions should not be added to snapshot.
+    --exceptions FILE
+        Specifies a file with the list of exceptions should not be added to
+        the snapshot.
 
-	--no-timestamp
-		Will not add timestamp to the snapshot name.
+    --no-timestamp
+        Will not add timestamp to the snapshot name.
 
-	--help
-		This help message.
+    --help
+        This help message.
 "
 
 tar="tar vjcf"
@@ -33,49 +34,49 @@ timestamp_format="+%Y%m%d_%H%M%S"
 suffix="_$(date $timestamp_format).$extension"
 
 for ((i=0;++i<=$#;)); do
-	case ${@:$i:1} in
-		--root) root=${@:$i+1:1} ;;
-		--path) path=${@:$i+1:1} ;;
-		--target) target=${@:$i+1:1} ;;
-		--exceptions) exceptions=${@:$i+1:1} ;;
-		--no-timestamp) suffix=".$extension" ;;
-		--help) echo "$man"; exit 0 ;;
-	esac
+    case ${@:$i:1} in
+        --root) root=${@:$i+1:1} ;;
+        --path) path=${@:$i+1:1} ;;
+        --target) target=${@:$i+1:1} ;;
+        --exceptions) exceptions=${@:$i+1:1} ;;
+        --no-timestamp) suffix=".$extension" ;;
+        --help) echo "$man"; exit 0 ;;
+    esac
 done
 
 if [ -n "$root" ] && [ ! -d "$root" ]; then echo "$root not found."; exit 1; fi
 
 if [ -n "$exceptions" ]; then
-	if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 1; fi
-	exceptions="-X $exceptions"
+    if [ ! -f "$exceptions" ]; then echo "$exceptions not found."; exit 1; fi
+    exceptions="-X $exceptions"
 fi
 
 if [ -n "$target" ]; then
-	IFS=$':'; target_tokens=($target); IFS=$' '
+    IFS=$':'; target_tokens=($target); IFS=$' '
 
-	if [ -n "${target_tokens[1]}" ]; then
-		host=${target_tokens[0]}
-		target=${target_tokens[1]}
-	else
-		target=${target_tokens[0]}
-	fi
+    if [ -n "${target_tokens[1]}" ]; then
+        host=${target_tokens[0]}
+        target=${target_tokens[1]}
+    else
+        target=${target_tokens[0]}
+    fi
 
-	target_path="-C ${target%/*}"
-	target=${target##*/}
+    target_path="-C ${target%/*}"
+    target=${target##*/}
 else
-	target=${PWD##*/}
+    target=${PWD##*/}
 fi
 
 filename=$target$suffix
 
 if [ -n "$host" ]; then
-	ssh $host "$tar - $target_path $exceptions $target" | cat > $filename
+    ssh $host "$tar - $target_path $exceptions $target" | cat > $filename
 else
-	if [ -z "$target_path" ]; then cd ../; fi
-	$tar $filename $target_path $exceptions $target
+    if [ -z "$target_path" ]; then cd ../; fi
+    $tar $filename $target_path $exceptions $target
 fi
 
 if [ -n "$root" ]; then
-	mkdir -p $root/$path/$target
-	mv $filename $root/$path/$target
+    mkdir -p $root/$path/$target
+    mv $filename $root/$path/$target
 fi
